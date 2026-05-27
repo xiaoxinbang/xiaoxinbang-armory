@@ -104,7 +104,7 @@ const FLYWHEEL_RULES = [
           'src/pages/花积分/花积分.vue',
           'backend/routes/pointsShop.js'
         ],
-        keywords: ['spend', 'exchange', 'shop']
+        keywords: ['spend', 'exchange', 'shop', '兑换', 'payPoints', '积分']
       },
       {
         name: '会员体系',

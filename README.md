@@ -28,6 +28,7 @@
 | [Understand Anything](agents/understand-anything/) | 🔍 断裂点侦探 | 飞轮断裂点检测、变更分析 |
 | [Karpathy Skills](agents/karpathy-skills/) | 📜 规则制定者 | 积分/分润/触发规则 |
 | [Claude Plugins](agents/claude-plugins/) | ⚡ 自动化引擎 | 飞轮触发插件、质量门禁 |
+| [User Memory Agent](agents/user-memory-agent/) | 🧠 记忆分析者 | 千人千面记忆、预判需求、主动服务 |
 | [Presenton](agents/presenton/) | 📑 内容引擎 | 五帮文档/PPT自动生成 |
 | [NVIDIA LongLive](agents/longlive/) | 🎬 视频引擎 | 五帮视频教程/宣传片 |
 
@@ -101,11 +102,12 @@ node sandbox/tests/e2e/flywheel-full-cycle.test.js
 
 ```
 兵器库
-├── agents/          ← 6大智能体 (CLAUDE.md Skills)
+├── agents/         ← 7大智能体 (CLAUDE.md Skills)
 │   ├── codegraph/          📊 地图构建者
 │   ├── understand-anything/ 🔍 断裂点侦探
 │   ├── karpathy-skills/    📜 规则制定者
 │   ├── claude-plugins/     ⚡ 自动化引擎
+│   ├── user-memory-agent/  🧠 记忆分析者
 │   ├── presenton/          📑 内容引擎
 │   └── longlive/           🎬 视频引擎
 ├── workflows/       ← 工作流编排 (含飞轮)

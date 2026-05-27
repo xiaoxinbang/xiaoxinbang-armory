@@ -34,6 +34,7 @@
 | `@understand-anything` | 🔍 断裂点侦探 | 飞轮断裂点检测、变更影响分析 |
 | `@karpathy-skills` | 📜 规则制定者 | 积分/分润/飞轮触发规则编写 |
 | `@claude-plugins` | ⚡ 自动化引擎 | 飞轮触发插件、质量门禁 |
+| `@user-memory-agent` | 🧠 记忆分析者 | 千人千面记忆、预判需求、主动服务 |
 | `@presenton` | 📑 内容引擎 | 五帮文档/PPT自动生成 |
 | `@longlive` | 🎬 视频引擎 | 五帮视频教程/宣传片生成 |
 
