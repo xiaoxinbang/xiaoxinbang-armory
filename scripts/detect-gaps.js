@@ -282,6 +282,72 @@ function detectGaps() {
   console.log(`  完整链路: ${passed.length}/${FLYWHEEL_RULES.length}`);
   console.log(`  检测时间: ${new Date().toLocaleString()}\n`);
 
+  // ==========================================
+  // 推广团长体系检测
+  // ==========================================
+  console.log('========================================');
+  console.log('  推广团长链路检测（做一件事收益叠加）');
+  console.log('========================================\n');
+
+  const PROMOTER_CHECKS = [
+    { name: '团长QR码入口', files: ['src/pages/邀请好友/邀请好友.vue', 'src/utils/inviteInviterLedger.js'],
+      keywords: ['二维码', 'inviteCode', '邀请码'], severity: 'HIGH' },
+    { name: '用户绑定关系', files: ['backend/routes/user.js', 'src/utils/api.js'],
+      keywords: ['invitedBy', 'use-invite', 'inviteCode'], severity: 'HIGH' },
+    { name: '分润结算', files: ['src/config.js', 'backend/routes/points.js'],
+      keywords: ['profitSharing', '分润', 'commission'], severity: 'HIGH' },
+    { name: '团队管理', files: ['src/pages/创业中心/我的团队.vue'],
+      keywords: ['团队', 'team'], severity: 'MEDIUM' },
+    { name: '收益展示', files: ['src/pages/创业中心/我的收入.vue'],
+      keywords: ['收入', 'income', '收益'], severity: 'MEDIUM' },
+    { name: '推广素材', files: ['src/pages/创业中心/推广用户.vue'],
+      keywords: ['推广', 'share', '分享'], severity: 'MEDIUM' },
+  ];
+
+  let promoterPassed = 0;
+  let promoterFailed = 0;
+
+  for (const check of PROMOTER_CHECKS) {
+    let allExist = true;
+    let allHaveKeywords = true;
+
+    for (const file of check.files) {
+      const fullPath = path.join(PROJECT_DIR, file);
+      if (!fs.existsSync(fullPath)) {
+        allExist = false;
+        console.log(`  ✗ 文件缺失: ${file}`);
+      }
+    }
+
+    if (allExist) {
+      for (const file of check.files) {
+        const fullPath = path.join(PROJECT_DIR, file);
+        if (fs.existsSync(fullPath)) {
+          const content = fs.readFileSync(fullPath, 'utf-8');
+          if (!check.keywords.some(kw => content.includes(kw))) {
+            allHaveKeywords = false;
+            console.log(`  ✗ 关键词缺失 ${check.keywords.join('|')}: ${file}`);
+          }
+        }
+      }
+    }
+
+    if (allExist && allHaveKeywords) {
+      console.log(`  ✓ [${check.severity}] ${check.name}`);
+      promoterPassed++;
+    } else {
+      console.log(`  ✗ [${check.severity}] ${check.name}`);
+      promoterFailed++;
+    }
+  }
+
+  console.log(`\n  团长链路: ${promoterPassed}/${promoterPassed + promoterFailed}`);
+  if (promoterFailed === 0) {
+    console.log('  ✓ 推广团长体系完整！做一件事收益叠加的飞轮已就绪。\n');
+  } else {
+    console.log(`  ⚠ ${promoterFailed} 项缺失，需补充\n`);
+  }
+
   // 输出总结
   const report = {
     detect_date: new Date().toISOString(),

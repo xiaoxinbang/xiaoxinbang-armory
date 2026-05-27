@@ -175,6 +175,44 @@ function audit() {
     stage_distribution: stageCounts,
     details: WUBA_PAGES
   }, null, 2));
+
+  // ==========================================
+  // 推广团长体系审计
+  // ==========================================
+  console.log('\n========================================');
+  console.log('  推广团长体系审计');
+  console.log('========================================\n');
+
+  const promoterChecks = [
+    { name: '邀请码系统', file: 'src/utils/inviteInviterLedger.js', keyword: 'inviteCode' },
+    { name: '邀请奖励', file: 'src/utils/inviteRefereeReward.js', keyword: 'reward' },
+    { name: '推广用户页', file: 'src/pages/创业中心/推广用户.vue', keyword: '推广' },
+    { name: '邀请商家页', file: 'src/pages/创业中心/邀请商家.vue', keyword: '邀请' },
+    { name: '我的团队页', file: 'src/pages/创业中心/我的团队.vue', keyword: '团队' },
+    { name: '分润配置', file: 'src/config.js', keyword: 'profitSharing' },
+    { name: '二维码推广', file: 'src/pages/邀请好友/邀请好友.vue', keyword: '邀请码' },
+  ];
+
+  let promoterFound = 0;
+  for (const check of promoterChecks) {
+    const fullPath = path.join(PROJECT_DIR, check.file);
+    const exists = fs.existsSync(fullPath);
+    let hasKeyword = false;
+    if (exists) {
+      const content = fs.readFileSync(fullPath, 'utf-8');
+      hasKeyword = content.includes(check.keyword);
+    }
+    const status = exists && hasKeyword ? '✓' : '✗';
+    if (exists && hasKeyword) promoterFound++;
+    console.log(`  ${status} ${check.name} (${check.file})`);
+  }
+
+  console.log(`\n  团长体系覆盖: ${promoterFound}/${promoterChecks.length}`);
+  if (promoterFound === promoterChecks.length) {
+    console.log('  ✓ 推广团长体系完整！做一件事收益叠加的飞轮已就绪。\n');
+  } else {
+    console.log(`  ⚠ ${promoterChecks.length - promoterFound} 项缺失，需补充\n`);
+  }
 }
 
 audit();
