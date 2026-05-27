@@ -1,0 +1,60 @@
+# 孝心帮飞轮端到端闭环验证工作流
+# 在沙盒环境中模拟完整用户生命周期
+
+name: 飞轮E2E闭环验证
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+    paths:
+      - 'src/**'
+      - 'backend/**'
+      - 'pages.json'
+  workflow_dispatch:
+
+jobs:
+  e2e:
+    name: 飞轮E2E完整闭环测试
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:6
+        ports:
+          - 27017:27017
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: 启动后端沙盒
+        working-directory: backend
+        run: |
+          npm ci
+          npm start &
+          sleep 3
+        env:
+          NODE_ENV: sandbox
+          MONGODB_URI: mongodb://localhost:27017/xiaoxinbang_sandbox
+          PORT: 3000
+
+      - name: 运行飞轮E2E测试
+        run: node armory/scripts/run-e2e-flywheel.js
+        env:
+          API_BASE: http://localhost:3000/api
+
+      - name: 运行断裂点检测
+        run: node armory/scripts/detect-gaps.js
+        continue-on-error: true
+
+      - name: 生成验证报告
+        if: always()
+        run: |
+          echo "## 飞轮E2E验证报告" > verification-report.md
+          echo "### PR: ${{ github.event.pull_request.title }}" >> verification-report.md
+          echo "### 变更文件:" >> verification-report.md
+          git diff --name-only ${{ github.event.pull_request.base.sha }}...${{ github.event.pull_request.head.sha }} >> verification-report.md

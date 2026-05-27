@@ -60,3 +60,32 @@ api:
 - 状态管理: Vuex store 在 src/store/
 - 支付链路: 前端 → backend/routes/pay.js → wx-pay utils
 - 用户系统: 前端 → backend/routes/user.js → MongoDB User Model
+
+## 五帮飞轮地图构建
+
+### 输出: 飞轮覆盖矩阵
+按五帮五维输出每个页面的归属和飞轮阶段：
+
+```yaml
+flywheel_coverage:
+  wuba:
+    - name: 帮长辈
+      pages: [E01-E17]
+      flywheel_stages: [inflow, retain, lockin]
+    - name: 帮家属
+      pages: [F01-F07]
+      flywheel_stages: [retain, lockin, virality]
+    - name: 帮社区
+      pages: [C01-C11]
+      flywheel_stages: [attract, retain, lockin]
+    - name: 帮商家
+      pages: [B01-B07]
+      flywheel_stages: [attract, lockin]
+    - name: 帮创业
+      pages: [P01-P10]
+      flywheel_stages: [attract, retain, lockin, virality]
+```
+
+### 触发时机
+- 每次项目结构变更后自动扫描
+- 每次新页面/路由添加后增量更新

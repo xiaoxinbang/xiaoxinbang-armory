@@ -58,3 +58,43 @@ functionName: "getUserInfo"
 3. **风险等级**: LOW / MEDIUM / HIGH
 4. **详细链路**: 调用链或数据流
 5. **建议**: 下一步行动
+
+## 五帮飞轮断裂点检测
+
+### 检测规则
+```javascript
+// 五阶段飞轮闭环检测
+const GAP_RULES = [
+  { from: 'attract', to: 'inflow',
+    check: 'has_entry_point',
+    entries: ['语音注册', '微信登录', '游客引导'] },
+  { from: 'inflow', to: 'retain',
+    check: 'has_onboarding',
+    conditions: ['首次签到引导', '积分赚取引导', '核心功能推荐'] },
+  { from: 'retain', to: 'lockin',
+    check: 'has_sticky_feature',
+    conditions: ['军衔系统', '积分消耗', '会员体系', 'SOS守护'] },
+  { from: 'lockin', to: 'virality',
+    check: 'has_share_trigger',
+    conditions: ['邀请好友奖励', '军衔炫耀', '生日祝福分享', '推广分润'] },
+  { from: 'virality', to: 'attract',
+    check: 'has_return_path',
+    conditions: ['邀请码绑定', '分享卡片注册', '推广二维码'] },
+]
+```
+
+### 触发时机
+- pre-commit: 检测变更是否导致飞轮断裂
+- PR创建: 自动评论影响范围和断裂点
+- 每日定时: 全量飞轮审计
+
+### 输出格式
+```yaml
+flywheel_gaps:
+  detected: true/false
+  gaps:
+    - from: retain
+      to: lockin
+      missing: 军衔升级触发事件
+      severity: HIGH
+      suggestion: 在pointsUtil.js升级逻辑中添加弹窗事件

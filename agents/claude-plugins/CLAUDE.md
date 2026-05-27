@@ -49,3 +49,49 @@ CI/CD 流程:
 
 所有插件在 `.claude/settings.json` 或 `CLAUDE.md` 中注册。
 插件必须通过沙盒测试才能进入生产流程。
+
+## 五帮飞轮自动化引擎
+
+### 飞轮触发插件
+实现 5 个自动化触发点：
+
+```javascript
+// 1. 签到完成 → 自动发积分 → 检查军衔升级
+trigger('sign_complete', async (userId, taskId) => {
+  await awardPoints(userId, taskId);
+  await checkRankUpgrade(userId);
+});
+
+// 2. 军衔升级 → 弹窗通知 → 引导邀请好友
+trigger('rank_upgrade', async (userId, newRank) => {
+  await showCelebration(userId, newRank);
+  await promptInvite(userId);
+});
+
+// 3. 邀请好友 → 双积分结算 → 通知双方
+trigger('invite_accepted', async (inviterId, refereeId) => {
+  await awardBoth(inviterId, refereeId, 200);
+  await notifyInviter(inviterId, refereeId);
+});
+
+// 4. 创业者推广 → 绑定关系 → 分润自动到账
+trigger('referral_consumption', async (referrerId, amount) => {
+  const share = calculateProfitShare(amount, referrerId);
+  await distributeCommission(referrerId, share);
+});
+
+// 5. 每日飞轮审计 → 检测断裂点 → 生成报告
+trigger('daily_flywheel_audit', async () => {
+  const gaps = await detectFlywheelGaps();
+  await generateAuditReport(gaps);
+});
+```
+
+### 飞轮插件注册表
+| 插件名 | 触发时机 | 职责 |
+|--------|---------|------|
+| sign-reward | 签到完成 | 自动发放积分 |
+| rank-celebration | 军衔升级 | 庆祝弹窗 |
+| invite-settlement | 邀请完成 | 双积分结算 |
+| profit-distribution | 消费完成 | 分润自动到账 |
+| flywheel-audit | 每日6:00 | 飞轮审计报告 |

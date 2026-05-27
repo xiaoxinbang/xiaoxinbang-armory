@@ -1,0 +1,58 @@
+# 孝心帮每日飞轮审计工作流
+# 定时检测飞轮健康状态，自动报告断裂点
+
+name: 每日飞轮审计
+
+on:
+  schedule:
+    - cron: '0 22 * * *'  # 每天6:00 (北京时间 UTC+8)
+  workflow_dispatch:       # 支持手动触发
+
+jobs:
+  audit:
+    name: 飞轮链路全面审计
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: 飞轮覆盖审计
+        run: node armory/scripts/flywheel-audit.js
+        continue-on-error: true
+
+      - name: 断裂点检测
+        run: node armory/scripts/detect-gaps.js
+        continue-on-error: true
+        id: detect-gaps
+
+      - name: 生成审计报告
+        if: always()
+        run: |
+          echo "## 每日飞轮审计报告" > flywheel-report.md
+          echo "### 审计时间: $(date '+%Y-%m-%d %H:%M:%S')" >> flywheel-report.md
+          echo "" >> flywheel-report.md
+          if [ -f flywheel-gaps.md ]; then
+            echo "### 断裂点检测" >> flywheel-report.md
+            cat flywheel-gaps.md >> flywheel-report.md
+          fi
+          echo "" >> flywheel-report.md
+          echo "### 覆盖矩阵" >> flywheel-report.md
+          node armory/scripts/flywheel-audit.js >> flywheel-report.md
+
+      - name: 上传审计报告
+        uses: actions/upload-artifact@v4
+        with:
+          name: flywheel-report
+          path: flywheel-report.md
+
+      - name: 飞轮断裂告警
+        if: steps.detect-gaps.outputs.exitcode != 0
+        run: |
+          echo "::warning::飞轮断裂点检测到问题，请及时修复！"

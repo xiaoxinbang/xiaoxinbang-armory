@@ -50,3 +50,44 @@
 - 后端: Express + MongoDB, 路由在 backend/routes/
 - 所有 API 返回格式: `{ code, data, message }`
 - 页面必须包含 WarmHeader 组件
+
+## 五帮飞轮规则制定
+
+### 积分规则规范
+每个 taskId 必须定义：
+```javascript
+{
+  taskId: 'sign_morning',     // 唯一任务ID
+  points: 30,                 // 积分值
+  frequency: 'daily',         // 频次: daily/weekly/once
+  maxDaily: 240,              // 每日上限
+  flywheelStage: 'retain',    // 所属飞轮阶段
+  wubaRole: ['elderly'],      // 服务角色
+}
+```
+
+### 分润计算规范
+```javascript
+// config.js profitSharing 五级分润比例
+{
+  direct: 0.30,       // 直接推广 30%
+  indirect: 0.05,     // 间接推广 5%
+  merchant: 0.05,     // 商家分成 5%
+  district: 0.12,     // 区级代理 12%
+  city: 0.08,         // 市级代理 8%
+  province: 0.05,     // 省级代理 5%
+  platform: 0.13,     // 平台 13%
+  pointsPool: 0.20,   // 积分池 20%
+  // 总计必须 = 100%
+}
+```
+
+### 飞轮触发规则
+每阶段转换必须有对应的自动化触发：
+```
+attract→inflow:  注册入口存在
+inflow→retain:   onboarding完成
+retain→lockin:   活跃阈值达标
+lockin→virality: 分享冲动触发
+virality→attract:回流入口存在
+```
