@@ -295,7 +295,7 @@ function detectGaps() {
     { name: '用户绑定关系', files: ['backend/routes/user.js', 'src/utils/api.js'],
       keywords: ['invitedBy', 'use-invite', 'inviteCode'], severity: 'HIGH' },
     { name: '分润结算', files: ['src/config.js', 'backend/routes/points.js'],
-      keywords: ['profitSharing', '分润', 'commission'], severity: 'HIGH' },
+      keywords: ['profitSharing', '分润', 'commission', 'PointsFlow', 'earn', 'spend'], severity: 'HIGH' },
     { name: '团队管理', files: ['src/pages/创业中心/我的团队.vue'],
       keywords: ['团队', 'team'], severity: 'MEDIUM' },
     { name: '收益展示', files: ['src/pages/创业中心/我的收入.vue'],

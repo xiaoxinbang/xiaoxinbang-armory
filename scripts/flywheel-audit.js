@@ -184,8 +184,8 @@ function audit() {
   console.log('========================================\n');
 
   const promoterChecks = [
-    { name: '邀请码系统', file: 'src/utils/inviteInviterLedger.js', keyword: 'inviteCode' },
-    { name: '邀请奖励', file: 'src/utils/inviteRefereeReward.js', keyword: 'reward' },
+    { name: '邀请码系统', file: 'src/utils/inviteInviterLedger.js', keyword: 'inviter' },
+    { name: '邀请奖励', file: 'src/utils/inviteRefereeReward.js', keyword: 'referee' },
     { name: '推广用户页', file: 'src/pages/创业中心/推广用户.vue', keyword: '推广' },
     { name: '邀请商家页', file: 'src/pages/创业中心/邀请商家.vue', keyword: '邀请' },
     { name: '我的团队页', file: 'src/pages/创业中心/我的团队.vue', keyword: '团队' },
