@@ -1,0 +1,109 @@
+# 孝心帮全自动工作流（本地/CI 通用编排）
+# 通过 Claude Code 智能体团队执行
+
+name: 全自动工作流
+version: 1.0.0
+
+on:
+  # 触发方式
+  code_change:    # 代码变更
+  schedule:       # 定时任务
+  manual:         # 手动触发
+
+jobs:
+  # ============================================
+  # 阶段1: 代码理解与分析
+  # ============================================
+  analyze:
+    name: "阶段1 - 代码理解与分析"
+    agents: [codegraph, understand-anything]
+
+    steps:
+      - agent: codegraph
+        task: 扫描项目结构，构建知识图谱
+        output: knowledge-graph.yaml
+
+      - agent: understand-anything
+        task: 分析变更影响范围，评估风险等级
+        output: impact-analysis.md
+
+  # ============================================
+  # 阶段2: 开发与代码生成
+  # ============================================
+  develop:
+    name: "阶段2 - 开发与代码生成"
+    agents: [karpathy-skills, claude-plugins]
+    needs: [analyze]
+
+    steps:
+      - agent: karpathy-skills
+        task: 根据变更需求编写 CLAUDE.md 工作指令
+        output: .claude/skills/
+
+      - agent: claude-plugins
+        task: 激活对应插件的开发模式
+        config: plugins.dev-mode
+
+  # ============================================
+  # 阶段3: 测试与验证
+  # ============================================
+  test:
+    name: "阶段3 - 沙盒测试与验证"
+    agents: [claude-plugins]
+    needs: [develop]
+
+    steps:
+      - name: 沙盒环境启动
+        run: cd sandbox && docker-compose up -d
+
+      - name: 前端构建测试
+        run: cd sandbox/frontend && npm run build
+
+      - name: 后端启动测试
+        run: cd sandbox/backend && npm start
+
+      - name: 集成测试
+        run: cd sandbox && npm test
+
+      - name: 沙盒清理
+        run: cd sandbox && docker-compose down
+
+  # ============================================
+  # 阶段4: 代码审查
+  # ============================================
+  review:
+    name: "阶段4 - 智能代码审查"
+    agents: [understand-anything, claude-plugins]
+    needs: [test]
+
+    steps:
+      - agent: understand-anything
+        task: 全量代码审查，检查潜在问题
+
+      - agent: claude-plugins
+        task: 运行质量门禁检查
+        rules:
+          - 测试覆盖率 >= 80%
+          - 无高危安全漏洞
+          - 代码风格符合规范
+
+  # ============================================
+  # 阶段5: 文档与发布
+  # ============================================
+  publish:
+    name: "阶段5 - 文档生成与发布"
+    agents: [presenton, longlive]
+    needs: [review]
+
+    steps:
+      - agent: presenton
+        task: 生成版本发布文档/PPT
+        template: release-notes
+
+      - agent: longlive
+        task: 生成新功能介绍视频（可选）
+
+      - agent: claude-plugins
+        task: 执行部署流程
+```
+

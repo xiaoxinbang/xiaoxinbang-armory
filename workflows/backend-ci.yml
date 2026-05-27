@@ -1,0 +1,40 @@
+# 孝心帮后端 CI 工作流
+# 适用于 Express + MongoDB 项目
+
+name: Backend CI
+
+on:
+  push:
+    paths:
+      - 'backend/**'
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      mongodb:
+        image: mongo:6
+        ports:
+          - 27017:27017
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install Dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Run Tests
+        working-directory: backend
+        run: npm test
+
+      - name: Security Scan
+        run: npx snyk test backend/
+```
+

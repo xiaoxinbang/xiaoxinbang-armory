@@ -1,0 +1,56 @@
+# 部署工作流
+# 支持沙盒预发布 → 生产环境升级
+
+name: Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: '部署环境'
+        required: true
+        default: 'sandbox'
+        type: choice
+        options:
+          - sandbox
+          - staging
+          - production
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: ${{ github.event.inputs.environment }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 沙盒验证
+        if: github.event.inputs.environment == 'sandbox'
+        run: |
+          echo "启动沙盒环境..."
+          # 启动沙盒测试
+
+      - name: 部署到预发布
+        if: github.event.inputs.environment == 'staging'
+        run: |
+          echo "部署到预发布环境..."
+          # 预发布部署脚本
+
+      - name: 生产环境部署
+        if: github.event.inputs.environment == 'production'
+        run: |
+          echo "部署到生产环境..."
+          # 生产部署脚本（需人工确认）
+
+      - name: 健康检查
+        run: |
+          echo "执行健康检查..."
+          # 部署后健康检查
+
+      - name: 回滚预案
+        if: failure()
+        run: |
+          echo "触发回滚..."
+          # 回滚脚本
+```
+
