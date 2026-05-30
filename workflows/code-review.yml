@@ -1,0 +1,43 @@
+# 智能代码审查工作流
+
+name: AI Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Analyze Changes
+        uses: understand-anything/action@v1
+        with:
+          base: ${{ github.base_ref }}
+          head: ${{ github.head_ref }}
+
+      - name: Generate Report
+        run: |
+          echo "## 代码审查报告" > review-report.md
+          echo "### 变更文件" >> review-report.md
+          git diff --name-only ${{ github.base_ref }}...${{ github.head_ref }} >> review-report.md
+
+      - name: Post Review Comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const report = fs.readFileSync('review-report.md', 'utf8');
+            github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: report
+            });
+```
+

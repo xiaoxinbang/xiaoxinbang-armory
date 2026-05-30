@@ -1,0 +1,67 @@
+# 孝心帮沙盒测试环境
+# 完全隔离的测试环境，模拟生产配置
+
+version: '3.8'
+
+services:
+  # ==================== 数据库 ====================
+  mongodb:
+    image: mongo:6
+    ports:
+      - "27018:27017"  # 用不同端口避免冲突
+    volumes:
+      - mongo-data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: xiaoxinbang_sandbox
+
+  # ==================== 后端 ====================
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "3001:3000"  # 用不同端口避免冲突
+    environment:
+      - NODE_ENV=sandbox
+      - MONGODB_URI=mongodb://mongodb:27017/xiaoxinbang_sandbox
+      - PORT=3000
+    depends_on:
+      - mongodb
+    volumes:
+      - ./backend:/app
+      - /app/node_modules
+
+  # ==================== 前端 ====================
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "8081:8080"  # 用不同端口避免冲突
+    environment:
+      - NODE_ENV=sandbox
+      - API_BASE_URL=http://backend:3000/api
+    depends_on:
+      - backend
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+  # ==================== 测试运行器 ====================
+  test-runner:
+    image: node:18
+    working_dir: /workspace
+    environment:
+      - NODE_ENV=sandbox
+      - MONGODB_URI=mongodb://mongodb:27017/xiaoxinbang_sandbox
+      - API_BASE_URL=http://backend:3000/api
+    depends_on:
+      - backend
+      - mongodb
+    volumes:
+      - ../:/workspace
+    command: >
+      sh -c "cd /workspace && npm test"
+
+volumes:
+  mongo-data:
