@@ -33,6 +33,7 @@
 | [User Memory Agent](agents/user-memory-agent/) | 🧠 记忆分析者 | 千人千面记忆、预判需求、主动服务 |
 | [Presenton](agents/presenton/) | 📑 内容引擎 | 五帮文档/PPT自动生成 |
 | [NVIDIA LongLive](agents/longlive/) | 🎬 视频引擎 | 五帮视频教程/宣传片 |
+| [Mano-CUA](agents/mano-cua/) | 🖐️ 视觉手脚 | 全角色GUI自动化执行 |
 
 ## 飞轮自动化闭环
 
@@ -111,9 +112,16 @@ node sandbox/tests/e2e/flywheel-full-cycle.test.js
 │   ├── claude-plugins/     ⚡ 自动化引擎
 │   ├── user-memory-agent/  🧠 记忆分析者
 │   ├── presenton/          📑 内容引擎
-│   └── longlive/           🎬 视频引擎
+│   ├── longlive/           🎬 视频引擎
+│   └── mano-cua/          🖐️ GUI视觉自动化
 ├── workflows/       ← 工作流编排 (含飞轮)
 ├── sandbox/         ← 沙盒测试环境 + E2E测试
 ├── scripts/         ← 飞轮审计自动化脚本
 └── docs/            ← 文档 (含五帮架构)
 ```
+
+## 技能包
+
+| 技能 | 来源 | 用途 |
+|------|------|------|
+| [Mano-CUA](skills/mano-cua/) | [Mininglamp-AI/mano-skill](https://github.com/Mininglamp-AI/mano-skill) | GUI视觉自动化插件，ClawHub安装源 |

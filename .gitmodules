@@ -1,0 +1,3 @@
+[submodule "skills/mano-cua"]
+	path = skills/mano-cua
+	url = https://github.com/Mininglamp-AI/mano-skill.git
