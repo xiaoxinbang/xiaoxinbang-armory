@@ -29,6 +29,36 @@
 - 构建后端 API 调用链
 - 识别循环依赖
 
+## 3. html-video
+
+**GitHub**: https://github.com/nexu-io/html-video
+**本地路径**: `D:\xiaoxinbang\html-video`
+**协议**: Apache-2.0
+**用途**: 开源本地 HTML→MP4 视频生成工具，用 HTML+CSS 做教程视频
+
+**核心特性**:
+- 本地渲染（Headless Chromium + ffmpeg），不上传数据
+- 21 个内置模板（讲解视频、产品展示、数据可视化等）
+- AI Agent 驱动（可选 Claude/Cursor 等配合生成）
+- 可插拔渲染引擎（Hyperframes / Remotion）
+
+**在孝心帮的应用**:
+- 语音挂号使用教程（30秒）
+- 每日签到引导视频
+- 老照片修复功能介绍
+- 其他功能教程批量生成
+
+**启动命令**:
+```powershell
+cd D:\xiaoxinbang\html-video
+node packages/cli/dist/bin.js studio
+# → http://127.0.0.1:3071
+```
+
+**前置依赖**:
+- ffmpeg（手动安装）
+- Google Chrome 或 Chromium（手动安装）
+
 ## 3. Understand Anything
 
 **GitHub**: https://github.com/understand-anything/code-navigator
