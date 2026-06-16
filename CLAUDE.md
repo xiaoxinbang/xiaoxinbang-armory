@@ -49,6 +49,10 @@
 | `@presenton` | 📑 内容引擎 | 五帮文档/PPT自动生成 |
 | `@longlive` | 🎬 视频引擎 | 五帮视频教程/宣传片生成 |
 | `html-video` | 🎥 本地视频工具 | HTML→MP4 教程视频制作（已部署） |
+| `iopaint` | 🖼️ 老照片AI修复引擎 | 本地部署 LaMa/GFPGAN/Real-ESRGAN 模型，零API成本 |
+| `photo-restoration` | 🖼️ 老照片修复引擎 v2.0 | **自研管线** GFP-GAN+Real-ESRGAN+CV，零成本，88积分/次 |
+| `liveportrait` | 🎭 老照片活化引擎 | （规划中）LivePortrait接入，让老照片动起来 |
+| `replicate-restore` | 🔄 Replicate API修复 | GFPGAN+Real-ESRGAN 云端修复（需 API Key） |
 
 ## 工作流模式
 

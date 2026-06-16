@@ -115,3 +115,98 @@ node packages/cli/dist/bin.js studio
 - 代码审查插件
 - 沙盒测试插件
 - 部署门禁插件
+## 7. IOPaint（本地老照片修复，优先推荐）
+
+**GitHub**: https://github.com/Sanster/IOPaint
+**用途**: 完全本地部署的老照片修复工具，支持破损修补(inpainting)、去划痕、上色、超分
+**特点**:
+- 完全免费开源，无需 API Key
+- 支持 LaMa/MAT/Real-ESRGAN/GFPGAN/DeOldify 等多种模型
+- 自带 Web UI + REST API，可被后端调用
+- 支持 CPU/GPU，国内直连无网络问题
+
+**在孝心帮的应用**:
+- 老照片破损修补（划痕、裂纹、缺块）
+- 黑白照片上色
+- 老照片超分辨率
+- 人脸修复增强
+
+**后端集成代码**: `backend/utils/iopaintBridge.js`（已写，调用即用）
+**管道集成**: `doubaoRestore.js` 已自动检测 IOPaint 服务，优先使用
+
+**启动命令**（安装后）:
+```bash
+# 安装
+pip install iopaint
+
+# 启动 LaMa 修补模型（CPU，推荐）
+iopaint start --model=lama --port=8080 --device=cpu
+
+# 启动 Real-ESRGAN 超分模型
+iopaint start --model=real-esrgan --port=8081 --device=cpu
+```
+
+## 8. Microsoft Bringing-Old-Photos-Back-to-Life（微软官方，最强效果）
+
+**GitHub**: https://github.com/microsoft/Bringing-Old-Photos-Back-to-Life
+**用途**: 老照片修复天花板，自动去划痕、去噪、人脸增强、黑白上色一条龙
+**特点**:
+- 微软开源，效果顶级
+- 支持严重破损、泛黄、裂纹照片
+- 有现成 Web UI / API
+- 需要 GPU 加速最佳
+
+**在孝心帮的应用**:
+- 重度破损老照片修复
+- 人脸模糊重建
+- 批量修复
+
+## 9. GFPGAN（腾讯 ARC Lab，人脸修复工业级）
+
+**GitHub**: https://github.com/TencentARC/GFPGAN
+**用途**: 人脸修复最强 GAN，模糊褪色遮挡人脸都能高清重建
+**特点**:
+- 保留身份特征
+- 速度快、效果稳
+- 可单独用，也可搭配上色/划痕模型
+
+**在孝心帮的应用**:
+- 老照片人脸模糊修复
+- 五官看不清重建
+
+## 10. LaMa（大区域破损修复）
+
+**GitHub**: https://github.com/saic-mdal/lama
+**用途**: 超大区域破损补全，裂纹、缺角、撕裂、水印去除
+**特点**:
+- 基于傅里叶卷积，分辨率鲁棒
+- 严重破损老照片首选
+- 已整合进 IOPaint（可通过 IOPaint 直接使用）
+
+## 11. DeOldify / DDColor（黑白上色）
+
+**GitHub**: 
+- DeOldify: https://github.com/jantic/DeOldify
+- DDColor: https://github.com/pku-vds/DDColor
+**用途**: 黑白老照片自动上色
+**特点**:
+- DeOldify：上色鼻祖，色彩自然
+- DDColor：2024 新模型，更真实无伪影
+- 已整合进 IOPaint
+
+## 选型建议
+
+| 场景 | 推荐方案 | 部署难度 |
+|:----|:---------|:--------:|
+| 一键全搞定 | **IOPaint**（LaMa + GFPGAN + Real-ESRGAN） | ⭐（最简单）|
+| 效果最好 | Microsoft Bring-Old-Photos-Back-to-Life | ⭐⭐⭐ |
+| 人脸修复 | GFPGAN | ⭐⭐ |
+| 纯前端/零服务器 | Inpaint-Web（WebGPU浏览器端） | ⭐（零部署）|
+
+## 现有代码集成状态
+
+| 文件 | 状态 | 说明 |
+|:----|:----:|------|
+| `backend/utils/iopaintBridge.js` | ✅ 已写好 | 调用本地 IOPaint 的 REST API |
+| `backend/utils/replicateRestore.js` | ✅ 已写好 | 调用 Replicate API（需 Key）|
+| `backend/utils/doubaoRestore.js` | ✅ 已集成 | IOPaint > 百度 > jimp 三级兜底 |

@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>孝心帮 · 三合一管理看板</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:-apple-system,'Microsoft YaHei',sans-serif;}
+body{background:#f0f2f5;color:#1a1a2e;}
+
+/* ===== 顶栏 ===== */
+.header{
+  background:linear-gradient(135deg,#1a1a2e,#16213e);color:#fff;
+  padding:16px 28px;display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;box-shadow:0 2px 12px rgba(0,0,0,0.2);
+}
+.header h1{font-size:18px;letter-spacing:1px;}
+.header .token-status{font-size:12px;color:#a0a0ff;cursor:pointer;}
+
+/* ===== Tab导航 ===== */
+.tabs{
+  display:flex;background:#fff;border-bottom:2px solid #eee;padding:0 20px;
+  position:sticky;top:54px;z-index:99;
+}
+.tab{
+  padding:14px 24px;cursor:pointer;font-size:14px;font-weight:600;color:#888;
+  border-bottom:3px solid transparent;transition:all 0.2s;user-select:none;
+}
+.tab:hover{color:#667eea;}
+.tab.active{color:#667eea;border-bottom-color:#667eea;}
+.tab .badge{
+  display:inline-block;background:#e74c3c;color:#fff;border-radius:10px;
+  padding:1px 7px;font-size:11px;margin-left:5px;
+}
+
+/* ===== 主内容区 ===== */
+.content{display:none;padding:20px 24px;max-width:1400px;margin:0 auto;}
+.content.active{display:block;}
+
+/* ===== 统计卡片行 ===== */
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-bottom:20px;}
+.card{
+  background:#fff;border-radius:12px;padding:16px 20px;box-shadow:0 1px 6px rgba(0,0,0,0.06);
+}
+.card .clabel{font-size:12px;color:#888;margin-bottom:4px;}
+.card .cvalue{font-size:26px;font-weight:700;}
+.card .csub{font-size:11px;color:#aaa;margin-top:2px;}
+.card.income .cvalue{color:#27ae60;}
+.card.expense .cvalue{color:#e74c3c;}
+.card.total .cvalue{color:#667eea;}
+
+/* ===== 双栏布局 ===== */
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px;}
+@media(max-width:900px){.two-col{grid-template-columns:1fr;}}
+
+/* ===== 面板通用 ===== */
+.panel{background:#fff;border-radius:12px;box-shadow:0 1px 6px rgba(0,0,0,0.06);overflow:hidden;margin-bottom:20px;}
+.panel-header{padding:14px 20px;border-bottom:1px solid #f0f0f0;display:flex;align-items:center;justify-content:space-between;}
+.panel-header h3{font-size:15px;font-weight:600;}
+.panel-body{padding:16px 20px;}
+
+/* ===== 表单 ===== */
+.form-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:12px;}
+.form-group label{display:block;font-size:12px;color:#666;margin-bottom:3px;font-weight:500;}
+.form-group input,.form-group select{
+  width:100%;padding:8px 12px;border:1.5px solid #ddd;border-radius:8px;font-size:13px;outline:none;transition:border-color 0.2s;
+}
+.form-group input:focus,.form-group select:focus{border-color:#667eea;}
+.btn{
+  padding:8px 20px;border:none;border-radius:8px;font-size:13px;cursor:pointer;font-weight:600;
+  transition:transform 0.15s,opacity 0.15s;
+}
+.btn:hover{transform:scale(1.02);}
+.btn-primary{background:#667eea;color:#fff;}
+.btn-success{background:#27ae60;color:#fff;}
+.btn-danger{background:#e74c3c;color:#fff;}
+.btn-outline{background:transparent;border:1.5px solid #667eea;color:#667eea;}
+.btn-sm{padding:5px 12px;font-size:11px;}
+.btn-export{background:#2ecc71;color:#fff;}
+
+/* ===== 表格 ===== */
+.table-wrap{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:13px;}
+th{text-align:left;padding:10px 12px;background:#f8f9fc;color:#666;font-weight:600;font-size:12px;border-bottom:2px solid #eee;}
+td{padding:10px 12px;border-bottom:1px solid #f0f0f0;}
+tr:hover td{background:#f8f9fc;}
+.tag {
+  display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500;
+}
+.tag.income{background:#d4edda;color:#27ae60;}
+.tag.expense{background:#ffe0e0;color:#e74c3c;}
+.tag.open{background:#fff3cd;color:#d68910;}
+.tag.resolved{background:#d4edda;color:#27ae60;}
+.tag.closed{background:#ecf0f1;color:#636e72;}
+
+/* ===== CSS柱状图 ===== */
+.chart-bar{display:flex;align-items:end;gap:6px;height:120px;padding:8px 0;}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;height:100%;justify-content:end;}
+.bar{width:100%;max-width:36px;border-radius:4px 4px 0 0;transition:height 0.3s;position:relative;}
+.bar.inc{background:linear-gradient(to top,#27ae60,#2ecc71);}
+.bar.exp{background:linear-gradient(to top,#e74c3c,#ff6b6b);}
+.bar-label{font-size:10px;color:#888;margin-top:4px;white-space:nowrap;}
+.bar-val{font-size:9px;color:#666;margin-bottom:2px;}
+
+/* ===== 分类饼图简化 ===== */
+.cat-list{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;}
+.cat-item{background:#f8f9fc;border-radius:20px;padding:4px 14px;font-size:12px;}
+.cat-item .cat-val{font-weight:600;margin-left:4px;}
+
+/* ===== 税务建议 ===== */
+.suggestion{padding:8px 14px;background:#f0faf0;border-radius:8px;margin-bottom:6px;font-size:13px;}
+.suggestion.warn{background:#fff8e1;}
+
+/* ===== 加载 ===== */
+.loading{text-align:center;padding:40px;color:#888;font-size:14px;}
+.loading::after{content:'...';animation:dots 1.5s infinite;}
+@keyframes dots{0%,20%{content:'.';}40%{content:'..';}60%,100%{content:'...';}}
+
+/* ===== 融资路线 ===== */
+.milestone{display:flex;gap:16px;margin-bottom:14px;align-items:flex-start;}
+.milestone-dot{width:20px;height:20px;border-radius:50%;flex-shrink:0;margin-top:2px;}
+.milestone-dot.current{background:#667eea;}
+.milestone-dot.next{background:#b0b0ff;}
+.milestone-dot.future{background:#ddd;}
+.milestone-body h4{font-size:14px;margin-bottom:2px;}
+.milestone-body p{font-size:12px;color:#888;}
+
+/* ===== 极端情况扩展 ===== */
+.extreme-card{padding:12px 16px;background:#f8f9fc;border-radius:10px;margin-bottom:10px;border-left:4px solid #e74c3c;}
+.extreme-card .ec-title{font-weight:600;font-size:14px;margin-bottom:4px;}
+.extreme-card .ec-step{font-size:12px;color:#666;padding:2px 0;}
+
+/* toast */
+.toast{
+  position:fixed;top:20px;right:20px;padding:12px 24px;border-radius:10px;color:#fff;
+  font-size:14px;z-index:99999;opacity:0;transform:translateY(-20px);transition:all 0.3s;max-width:400px;
+}
+.toast.show{opacity:1;transform:translateY(0);}
+.toast.success{background:#27ae60;}
+.toast.error{background:#e74c3c;}
+.toast.info{background:#667eea;}
+</style>
+</head>
+<body>
+
+<!-- ===== 顶栏（内置Token输入，不再弹窗） ===== -->
+<div class="header">
+  <h1>🏦 孝心帮 · 三合一管理看板</h1>
+  <div style="display:flex;align-items:center;gap:10px;">
+    <input id="tokenInput" type="password" placeholder="后端启动后自动生成Token，复制粘贴即可"
+      style="padding:6px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.1);color:#fff;font-size:12px;width:260px;outline:none;"
+      onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='rgba(255,255,255,0.2)'">
+    <button onclick="doLogin()" style="padding:6px 14px;border:none;border-radius:8px;background:#667eea;color:#fff;font-size:12px;cursor:pointer;font-weight:600;">连接</button>
+    <span id="tokenStatus" style="font-size:12px;color:#888;">未连接</span>
+  </div>
+</div>
+
+<!-- Enter快捷键 -->
+<script>document.addEventListener('DOMContentLoaded',function(){
+  document.getElementById('tokenInput').addEventListener('keydown',function(e){if(e.key==='Enter')doLogin();});
+});</script>
+
+<!-- ===== Tabs ===== -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('finance')">📊 财务</div>
+  <div class="tab" onclick="switchTab('legal')">⚖️ 法务</div>
+  <div class="tab" onclick="switchTab('strategic')">💹 金融</div>
+</div>
+
+<!-- ========================================================== -->
+<!-- 财务 TAB -->
+<!-- ========================================================== -->
+<div class="content active" id="tab-finance">
+  <!-- 统计卡片 -->
+  <div class="cards" id="finCards">
+    <div class="card income"><div class="clabel">今日收入</div><div class="cvalue" id="finTodayInc">0</div><div class="csub">分</div></div>
+    <div class="card expense"><div class="clabel">今日支出</div><div class="cvalue" id="finTodayExp">0</div><div class="csub">分</div></div>
+    <div class="card total"><div class="clabel">当月净额</div><div class="cvalue" id="finMonthNet">0</div><div class="csub">分</div></div>
+    <div class="card income"><div class="clabel">累计收入</div><div class="cvalue" id="finTotalInc">0</div><div class="csub">分</div></div>
+    <div class="card total"><div class="clabel">健康度</div><div class="cvalue" id="finHealth">--</div><div class="csub"><span id="finHealthGrade"></span></div></div>
+  </div>
+
+  <!-- 双栏：图表 + 表单 -->
+  <div class="two-col">
+    <!-- 7天趋势 -->
+    <div class="panel">
+      <div class="panel-header"><h3>📈 近7天收支趋势</h3></div>
+      <div class="panel-body"><div class="chart-bar" id="trendChart"><div class="loading">加载数据</div></div></div>
+    </div>
+
+    <!-- 手动记账 -->
+    <div class="panel">
+      <div class="panel-header"><h3>✏️ 手动记账</h3></div>
+      <div class="panel-body">
+        <div class="form-row">
+          <div class="form-group"><label>类型</label><select id="entryType"><option value="expense">支出</option><option value="income">收入</option></select></div>
+          <div class="form-group"><label>金额（分）</label><input id="entryAmount" type="number" placeholder="如: 599" value=""></div>
+          <div class="form-group"><label>分类</label><select id="entryCategory"><option value="auto">🤖 自动分类</option></select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="grid-column:1/-1"><label>说明</label><input id="entryDesc" placeholder="如: 服务器月费"></div>
+        </div>
+        <button class="btn btn-primary" onclick="addFinanceEntry()">💾 记一笔</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 分类汇总 + 税务 -->
+  <div class="two-col">
+    <div class="panel">
+      <div class="panel-header"><h3>📊 分类支出排名</h3></div>
+      <div class="panel-body"><div id="catSummary"><div class="loading">加载中</div></div></div>
+    </div>
+    <div class="panel">
+      <div class="panel-header"><h3>📋 税务规划</h3><button class="btn btn-sm btn-outline" onclick="loadTaxReport()">刷新</button></div>
+      <div class="panel-body"><div id="taxReport"><div class="loading">加载中</div></div></div>
+    </div>
+  </div>
+
+  <!-- 排队免单税务策略（独立大面板） -->
+  <div class="panel" style="border-left:4px solid #e74c3c;">
+    <div class="panel-header">
+      <h3>🎯 排队免单 · 科学合法降税专项策略</h3>
+      <button class="btn btn-sm btn-outline" onclick="loadTaxReport()">刷新</button>
+    </div>
+    <div class="panel-body"><div id="queueFreeBody"><div class="loading">加载中</div></div></div>
+    </div>
+  </div>
+
+  <!-- 提现服务费税务处理 -->
+  <div class="panel" style="border-left:4px solid #f39c12;">
+    <div class="panel-header">
+      <h3>💰 提现服务费 · 税务处理（10%进积分基金池 / 6%代扣个税）</h3>
+      <button class="btn btn-sm btn-outline" onclick="loadTaxReport()">刷新</button>
+    </div>
+    <div class="panel-body"><div id="withdrawFeeBody"><div class="loading">加载中</div></div></div>
+    </div>
+  </div>
+
+  <!-- 账本明细 -->
+  <div class="panel">
+    <div class="panel-header">
+      <h3>📋 账本明细</h3>
+      <div style="display:flex;gap:8px;">
+        <select id="ledgerFilter" onchange="loadFinanceEntries()" style="padding:4px 8px;border-radius:6px;border:1px solid #ddd;font-size:12px;">
+          <option value="">全部</option><option value="income">收入</option><option value="expense">支出</option>
+        </select>
+        <button class="btn btn-sm btn-export" onclick="exportCSV()">📥 导出CSV</button>
+      </div>
+    </div>
+    <div class="panel-body">
+      <div class="table-wrap"><table><thead><tr><th>日期</th><th>类型</th><th>分类</th><th>金额</th><th>说明</th></tr></thead><tbody id="ledgerBody"></tbody></table></div>
+      <div style="text-align:center;padding:12px;font-size:13px;color:#888;" id="ledgerMore"><a href="javascript:loadMoreEntries()" style="color:#667eea;">加载更多</a></div>
+    </div>
+  </div>
+
+  <!-- 利润池 -->
+  <div class="panel">
+    <div class="panel-header"><h3>🏊 利润池分配</h3><button class="btn btn-sm btn-outline" onclick="loadPools()">刷新</button></div>
+    <div class="panel-body"><div id="poolsBody"><div class="loading">加载中</div></div></div>
+  </div>
+</div>
+
+<!-- ========================================================== -->
+<!-- 法务 TAB -->
+<!-- ========================================================== -->
+<div class="content" id="tab-legal">
+  <div class="cards" id="legalCards">
+    <div class="card total"><div class="clabel">案件总数</div><div class="cvalue" id="legalTotal">0</div></div>
+    <div class="card expense"><div class="clabel">待处理</div><div class="cvalue" id="legalOpen">0</div></div>
+    <div class="card income"><div class="clabel">已解决</div><div class="cvalue" id="legalResolved">0</div></div>
+  </div>
+
+  <div class="two-col">
+    <!-- 新增案件 -->
+    <div class="panel">
+      <div class="panel-header"><h3>⚖️ 记录法务事件</h3></div>
+      <div class="panel-body">
+        <div class="form-row">
+          <div class="form-group"><label>类型</label><select id="caseType"><option value="compliance">合规审查</option><option value="merchant_dispute">商家纠纷</option><option value="user_complaint">用户投诉</option><option value="contract">合同审核</option><option value="other">其他</option></select></div>
+          <div class="form-group"><label>标题</label><input id="caseTitle" placeholder="如: 商家资质年审"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="grid-column:1/-1"><label>描述</label><input id="caseDesc" placeholder="事件描述"></div>
+        </div>
+        <button class="btn btn-primary" onclick="addLegalCase()">📝 记录</button>
+      </div>
+    </div>
+
+    <!-- 合规检查 -->
+    <div class="panel">
+      <div class="panel-header"><h3>🔍 合规检查清单</h3><button class="btn btn-sm btn-success" onclick="runCompliance()">一键检查</button></div>
+      <div class="panel-body"><div id="complianceBody"><div class="loading">加载中</div></div></div>
+    </div>
+  </div>
+
+  <!-- 案件台账 -->
+  <div class="panel">
+    <div class="panel-header">
+      <h3>📋 案件台账</h3>
+      <button class="btn btn-sm btn-export" onclick="exportLegal()">📥 导出CSV</button>
+    </div>
+    <div class="panel-body">
+      <div class="table-wrap"><table><thead><tr><th>日期</th><th>类型</th><th>标题</th><th>状态</th></tr></thead><tbody id="legalCasesBody"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- 极端情况预案 -->
+  <div class="panel">
+    <div class="panel-header"><h3>🛡️ 极端情况处理预案</h3></div>
+    <div class="panel-body"><div id="extremeBody"><div class="loading">加载中</div></div></div>
+  </div>
+</div>
+
+<!-- ========================================================== -->
+<!-- 金融 TAB -->
+<!-- ========================================================== -->
+<div class="content" id="tab-strategic">
+  <div class="cards" id="stratCards">
+    <div class="card income"><div class="clabel">ARPU</div><div class="cvalue" id="stratArpu">0</div><div class="csub">分/用户</div></div>
+    <div class="card total"><div class="clabel">GMV</div><div class="cvalue" id="stratGmv">0</div><div class="csub">分</div></div>
+    <div class="card income"><div class="clabel">DAU</div><div class="cvalue" id="stratDau">0</div><div class="csub">日活跃用户</div></div>
+    <div class="card total"><div class="clabel">估值</div><div class="cvalue" id="stratValuation">--</div><div class="csub" id="stratValuationMethod"></div></div>
+    <div class="card expense"><div class="clabel">融资阶段</div><div class="cvalue" id="stratStage" style="font-size:16px;">--</div></div>
+  </div>
+
+  <div class="two-col">
+    <!-- KPI -->
+    <div class="panel">
+      <div class="panel-header"><h3>📊 核心指标</h3><button class="btn btn-sm btn-outline" onclick="loadStrategic()">刷新</button></div>
+      <div class="panel-body"><div id="kpiBody"><div class="loading">加载中</div></div></div>
+    </div>
+
+    <!-- 记录决策 -->
+    <div class="panel">
+      <div class="panel-header"><h3>💡 记录金融决策</h3></div>
+      <div class="panel-body">
+        <div class="form-row">
+          <div class="form-group"><label>类型</label><select id="decType"><option>融资</option><option>投资</option><option>成本决策</option><option>战略调整</option><option>其他</option></select></div>
+          <div class="form-group"><label>标题</label><input id="decTitle" placeholder="如: 启动天使轮融资"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="grid-column:1/-1"><label>描述</label><input id="decDesc" placeholder="决策详情"></div>
+        </div>
+        <button class="btn btn-primary" onclick="addDecision()">📝 记录</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 融资路线 -->
+  <div class="panel">
+    <div class="panel-header"><h3>🚀 融资路线图</h3></div>
+    <div class="panel-body"><div id="fundingBody"><div class="loading">加载中</div></div></div>
+  </div>
+
+  <!-- 决策日志 -->
+  <div class="panel">
+    <div class="panel-header">
+      <h3>📋 决策日志</h3>
+      <button class="btn btn-sm btn-export" onclick="exportStrategic()">📥 导出CSV</button>
+    </div>
+    <div class="panel-body">
+      <div class="table-wrap"><table><thead><tr><th>日期</th><th>类型</th><th>标题</th><th>影响</th></tr></thead><tbody id="decisionsBody"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- 上市准备 -->
+  <div class="panel">
+    <div class="panel-header"><h3>🏛️ 上市准备进度</h3></div>
+    <div class="panel-body"><div id="ipoBody"><div class="loading">加载中</div></div></div>
+  </div>
+</div>
+
+<!-- ===== Toast ===== -->
+<div id="toast" class="toast"></div>
+
+<script>
+// ==============================
+// 全局状态
+// ==============================
+let TOKEN = '';
+let API_BASE = '/api';
+let ledgerPage = 1;
+
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.className = 'toast ' + type;
+  setTimeout(() => t.classList.add('show'), 10);
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ==============================
+// 登录
+// ==============================
+// 页面加载时自动尝试获取Token
+document.addEventListener('DOMContentLoaded', function() {
+  const status = document.getElementById('tokenStatus');
+  status.textContent = '⏳ 自动连接...';
+  status.style.color = '#888';
+
+  fetch(API_BASE + '/auth/admin-token')
+    .then(r => r.json()).then(d => {
+      if (d.ok && d.token) {
+        document.getElementById('tokenInput').value = d.token;
+        TOKEN = d.token;
+        status.textContent = '✅ 已自动连接';
+        status.style.color = '#2ecc71';
+        initDashboard();
+      } else {
+        status.textContent = '请输入Token';
+        status.style.color = '#888';
+      }
+    }).catch(() => {
+      status.textContent = '请输入Token';
+      status.style.color = '#888';
+    });
+});
+
+function doLogin() {
+  const t = document.getElementById('tokenInput').value.trim();
+  const status = document.getElementById('tokenStatus');
+  if (!t) { status.textContent = '⚠️ 请输入Token'; status.style.color = '#f39c12'; return; }
+
+  // 保存当前token用于API
+  TOKEN = t;
+
+  // 验证并加载数据
+  status.textContent = '⏳ 连接中...';
+  status.style.color = '#888';
+  fetch(API_BASE + '/finance/health', { headers: { 'Authorization': 'Bearer ' + t } })
+    .then(r => r.json()).then(d => {
+      if (d.ok) {
+        status.textContent = '✅ 已连接';
+        status.style.color = '#2ecc71';
+        initDashboard();
+      } else {
+        status.textContent = '❌ ' + (d.msg || 'Token无效');
+        status.style.color = '#e74c3c';
+        // 即使token无效，也加载空框架让用户能看到界面
+        loadEmptyDashboard();
+      }
+    }).catch(e => {
+      status.textContent = '❌ 连接失败: ' + e.message;
+      status.style.color = '#e74c3c';
+      loadEmptyDashboard();
+    });
+}
+
+// 加载空框架（连接不上时显示）
+function loadEmptyDashboard() {
+  document.querySelectorAll('.loading').forEach(el => {
+    el.innerHTML = '🔌 后端未启动？<br><span style="font-size:11px;color:#999;">双击"启动看板.bat"或在命令行运行 cd backend && node server.js</span>';
+  });
+}
+
+// ==============================
+// Tab切换
+// ==============================
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+  document.querySelector('.tab[onclick*="' + name + '"]').classList.add('active');
+  document.getElementById('tab-' + name).classList.add('active');
+}
+
+// ==============================
+// API工具
+// ==============================
+function api(path, opts = {}) {
+  const headers = { 'Authorization': 'Bearer ' + TOKEN, ...opts.headers };
+  if (opts.body && !(opts.body instanceof FormData)) headers['Content-Type'] = 'application/json';
+  return fetch(API_BASE + path, { ...opts, headers }).then(r => r.json());
+}
+
+// ==============================
+// 初始化
+// ==============================
+function initDashboard() {
+  loadFinanceDashboard();
+  loadTrendChart();
+  loadCategories();
+  loadFinanceEntries();
+  loadPools();
+  loadTaxReport();
+  loadLegalDashboard();
+  loadComplianceList();
+  loadLegalCases();
+  loadExtremeCases();
+  loadStrategic();
+  loadFundingRoadmap();
+  loadDecisions();
+  loadIpoReadiness();
+}
+
+// ==============================
+// 财务模块
+// ==============================
+function loadFinanceDashboard() {
+  api('/finance/dashboard').then(d => {
+    if (!d.ok) return;
+    const dt = d.data;
+    document.getElementById('finTodayInc').textContent = dt.today.income;
+    document.getElementById('finTodayExp').textContent = dt.today.pointsSpent;
+    document.getElementById('finMonthNet').textContent = dt.monthly.income - dt.monthly.pointsSpent;
+    document.getElementById('finTotalInc').textContent = dt.allTime.income;
+    document.getElementById('finHealth').textContent = dt.health.score || '--';
+    document.getElementById('finHealthGrade').textContent = dt.health.grade || '';
+  }).catch(() => {});
+
+  // 也从entries获取今日数据
+  api('/finance/daily-summary?days=1').then(d => {
+    if (!d.ok || !d.data.daily.length) return;
+    const today = d.data.daily[d.data.daily.length - 1];
+    document.getElementById('finTodayInc').textContent = today.income;
+    document.getElementById('finTodayExp').textContent = today.expense;
+  }).catch(() => {});
+}
+
+function loadTrendChart() {
+  api('/finance/daily-summary?days=7').then(d => {
+    if (!d.ok) return;
+    const chart = document.getElementById('trendChart');
+    chart.innerHTML = '';
+    const maxVal = Math.max(...d.data.daily.map(x => Math.max(x.income, x.expense, 1)));
+    d.data.daily.forEach(day => {
+      const col = document.createElement('div'); col.className = 'bar-col';
+      const incPct = (day.income / maxVal * 100);
+      const expPct = (day.expense / maxVal * 100);
+      if (day.income > 0) {
+        const bar = document.createElement('div'); bar.className = 'bar inc';
+        bar.style.height = incPct + 'px';
+        bar.title = '收入: ' + day.income;
+        col.appendChild(bar);
+      }
+      if (day.expense > 0) {
+        const bar = document.createElement('div'); bar.className = 'bar exp';
+        bar.style.height = expPct + 'px';
+        bar.title = '支出: ' + day.expense;
+        col.appendChild(bar);
+      }
+      const lbl = document.createElement('div'); lbl.className = 'bar-label';
+      lbl.textContent = day.date.slice(5);
+      col.appendChild(lbl);
+      if (!day.income && !day.expense) {
+        const dot = document.createElement('div'); dot.style.cssText = 'width:8px;height:8px;border-radius:50%;background:#eee;margin:auto;';
+        col.appendChild(dot);
+      }
+      chart.appendChild(col);
+    });
+  }).catch(() => {});
+}
+
+function loadCategories() {
+  api('/finance/categories').then(d => {
+    if (!d.ok) return;
+    const sel = document.getElementById('entryCategory');
+    sel.innerHTML = '<option value="auto">🤖 自动分类</option>';
+    d.data.income.forEach(c => { sel.innerHTML += '<option value="' + c.id + '">📗 ' + c.name + '</option>'; });
+    d.data.expense.forEach(c => { sel.innerHTML += '<option value="' + c.id + '">📕 ' + c.name + '</option>'; });
+  }).catch(() => {});
+}
+
+function addFinanceEntry() {
+  const type = document.getElementById('entryType').value;
+  const amount = document.getElementById('entryAmount').value;
+  const category = document.getElementById('entryCategory').value;
+  const description = document.getElementById('entryDesc').value;
+
+  if (!amount || amount <= 0) { showToast('请填写金额', 'error'); return; }
+  if (!description) { showToast('请填写说明', 'error'); return; }
+
+  api('/finance/entries', {
+    method: 'POST',
+    body: JSON.stringify({ type, amount: parseInt(amount), category, description }),
+  }).then(d => {
+    if (d.ok) {
+      showToast('✅ 记账成功: ' + description + ' ' + amount + '分');
+      document.getElementById('entryAmount').value = '';
+      document.getElementById('entryDesc').value = '';
+      loadFinanceEntries();
+      loadFinanceDashboard();
+      loadTrendChart();
+    } else {
+      showToast('❌ ' + (d.msg || '记账失败'), 'error');
+    }
+  }).catch(e => showToast('❌ ' + e.message, 'error'));
+}
+
+function loadFinanceEntries() {
+  const filter = document.getElementById('ledgerFilter').value;
+  ledgerPage = 1;
+  fetchEntries(filter, ledgerPage, true);
+}
+
+function fetchEntries(filter, page, reset) {
+  let url = '/finance/entries?page=' + page + '&limit=20';
+  if (filter) url += '&type=' + filter;
+
+  api(url).then(d => {
+    if (!d.ok) return;
+    const tbody = document.getElementById('ledgerBody');
+    if (reset) tbody.innerHTML = '';
+    const more = document.getElementById('ledgerMore');
+
+    d.data.list.forEach(e => {
+      const tr = document.createElement('tr');
+      const typeLabel = e.type === 'income' ? '收入' : '支出';
+      const typeTag = e.type === 'income' ? 'income' : 'expense';
+      const amountStr = (e.type === 'income' ? '+' : '-') + e.amount;
+      tr.innerHTML = '<td>' + e.date + '</td><td><span class="tag ' + typeTag + '">' + typeLabel + '</span></td><td>' + (e.categoryName || '未分类') + '</td><td style="font-weight:600;color:' + (e.type==='income'?'#27ae60':'#e74c3c') + '">' + amountStr + '</td><td>' + e.description + '</td>';
+      tbody.appendChild(tr);
+    });
+
+    if (d.data.total > page * 20) {
+      more.innerHTML = '<a href="javascript:loadMoreEntries()" style="color:#667eea;">加载更多 (' + (d.data.total - page * 20) + ' 条)</a>';
+    } else {
+      more.innerHTML = '共 ' + d.data.total + ' 条记录';
+    }
+  }).catch(() => {});
+}
+
+function loadMoreEntries() {
+  ledgerPage++;
+  const filter = document.getElementById('ledgerFilter').value;
+  fetchEntries(filter, ledgerPage, false);
+}
+
+function loadPools() {
+  api('/finance/pools').then(d => {
+    if (!d.ok) return;
+    const b = document.getElementById('poolsBody');
+    let html = '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;">';
+    Object.values(d.data.pools).forEach(p => {
+      html += '<div style="background:#f8f9fc;padding:12px;border-radius:10px;"><div style="font-size:13px;font-weight:600;">' + p.name + '</div><div style="font-size:22px;font-weight:700;color:#667eea;">' + p.balance + '</div><div style="font-size:11px;color:#888;">分 (' + (p.rate * 100) + '%)</div></div>';
+    });
+    html += '</div><div style="margin-top:10px;text-align:right;font-size:13px;color:#888;">合计: <strong style="color:#1a1a2e;">' + d.data.totalBalance + '</strong> 分</div>';
+    b.innerHTML = html;
+  }).catch(() => {});
+}
+
+function loadTaxReport() {
+  api('/finance/tax-report').then(d => {
+    if (!d.ok) return;
+    const b = document.getElementById('taxReport');
+    let html = '<div style="margin-bottom:8px;"><strong>推荐方案:</strong> ' + d.data.recommended + '</div>';
+    html += d.data.suggestions.map(s => '<div class="suggestion">' + s + '</div>').join('');
+    html += '<div style="margin-top:8px;font-size:11px;color:#aaa;">' + d.data.disclaimer + '</div>';
+    b.innerHTML = html;
+
+    // 排队免单策略
+    const qf = d.data.queueFree;
+    if (qf) {
+      const qb = document.getElementById('queueFreeBody');
+      if (!qb) return;
+      let qhtml = '';
+
+      // 税务本质认定
+      qhtml += '<div style="margin-bottom:16px;"><h4 style="font-size:15px;margin-bottom:8px;color:#1a1a2e;">' + qf.taxNature.title + '</h4>';
+      qhtml += '<p style="font-size:13px;color:#555;line-height:1.6;padding:10px 14px;background:#f8f9fc;border-radius:8px;margin-bottom:12px;">' + qf.taxNature.analysis + '</p>';
+
+      // 三个方案对比
+      qhtml += '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-bottom:12px;">';
+      qf.taxNature.threeOptions.forEach(opt => {
+        const isRec = opt.name.includes('推荐');
+        qhtml += '<div style="background:' + (isRec ? '#f0faf0' : '#f8f9fc') + ';border-radius:12px;padding:14px;border:2px solid ' + (isRec ? '#27ae60' : 'transparent') + ';">';
+        qhtml += '<div style="font-size:14px;font-weight:600;margin-bottom:6px;">' + opt.name + '</div>';
+        qhtml += '<div style="font-size:12px;color:#666;margin-bottom:8px;line-height:1.5;">📌 ' + opt.route + '</div>';
+        qhtml += '<div style="font-size:11px;color:#555;line-height:1.8;">';
+        qhtml += '💰 增值税: ' + opt.vat + '<br>';
+        qhtml += '📊 所得税: ' + opt.cit + '<br>';
+        qhtml += '👤 用户个税: ' + opt.pit + '<br>';
+        qhtml += '⚖️ 合规: ' + opt.compliance + '<br>';
+        qhtml += '🛡️ 风险: ' + opt.risk + '<br>';
+        qhtml += '📝 分录: <code style="font-size:10px;background:#eee;padding:1px 4px;border-radius:3px;">' + opt.accounting + '</code>';
+        qhtml += '</div></div>';
+      });
+      qhtml += '</div>';
+      qhtml += '<div style="background:#1a1a2e;color:#fff;padding:10px 14px;border-radius:8px;font-size:13px;"><strong>结论:</strong> ' + qf.taxNature.conclusion + '</div>';
+      qhtml += '</div>';
+
+      // 主体架构
+      qhtml += '<div style="margin-bottom:16px;padding-top:12px;border-top:1px solid #eee;">';
+      qhtml += '<h4 style="font-size:14px;margin-bottom:8px;">🏛️ ' + qf.structureStrategy.title + '</h4>';
+      qhtml += qf.structureStrategy.content.map(c => '<div style="font-size:12px;color:#555;padding:3px 0;">' + c + '</div>').join('');
+      qhtml += '</div>';
+
+      // 用户个税
+      qhtml += '<div style="margin-bottom:16px;"><h4 style="font-size:14px;margin-bottom:8px;">👤 ' + qf.pitStrategy.title + '</h4>';
+      qhtml += qf.pitStrategy.content.map(c => '<div style="font-size:12px;color:#555;padding:3px 0;">' + c + '</div>').join('');
+      qhtml += '</div>';
+
+      // 红线
+      qhtml += '<div style="margin-bottom:16px;background:#fff8e1;border-radius:10px;padding:14px;">';
+      qhtml += '<h4 style="font-size:14px;margin-bottom:8px;">' + qf.warningSigns.title + '</h4>';
+      qhtml += qf.warningSigns.content.map(c => '<div style="font-size:12px;padding:2px 0;">' + c + '</div>').join('');
+      qhtml += '</div>';
+
+      // 月度检查
+      qhtml += '<div style="margin-bottom:16px;"><h4 style="font-size:14px;margin-bottom:6px;">📋 每月税务检查清单</h4>';
+      qhtml += qf.monthlyChecklist.map(c => '<label style="display:flex;align-items:center;gap:8px;font-size:12px;padding:3px 0;cursor:pointer;"><input type="checkbox"> ' + c.slice(2) + '</label>').join('');
+      qhtml += '</div>';
+
+      // 最佳实体
+      qhtml += '<div style="margin-bottom:8px;"><h4 style="font-size:14px;margin-bottom:6px;">📌 ' + qf.bestEntityType.title + '</h4>';
+      qhtml += '<div style="font-size:15px;font-weight:700;color:#667eea;margin-bottom:4px;">' + qf.bestEntityType.recommendation + '</div>';
+      qhtml += qf.bestEntityType.reasons.map(r => '<div style="font-size:12px;color:#555;padding:2px 0;">' + r + '</div>').join('');
+      qhtml += '<div style="font-size:12px;color:#888;padding-top:4px;border-top:1px dashed #ddd;margin-top:4px;">替代方案: ' + qf.bestEntityType.alternative + '</div>';
+      qhtml += '</div>';
+
+      qb.innerHTML = qhtml;
+    }
+
+    // 提现服务费税务处理
+    const wf = d.data.queueFree?.withdrawalFee;
+    if (wf) {
+      const wb = document.getElementById('withdrawFeeBody');
+      if (!wb) return;
+      let whtml = '';
+
+      whtml += '<p style="font-size:13px;color:#555;padding:8px 12px;background:#f8f9fc;border-radius:8px;margin-bottom:12px;">' + wf.description + '</p>';
+
+      // 三种提现规则
+      wf.rules.forEach(r => {
+        whtml += '<div style="margin-bottom:14px;padding:14px;background:#fafafa;border-radius:10px;border-left:4px solid #f39c12;">';
+        whtml += '<div style="font-size:14px;font-weight:600;margin-bottom:4px;">' + r.type + '</div>';
+        whtml += '<div style="display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:12px;color:#555;line-height:1.8;">';
+        whtml += '<span style="color:#888;">费率:</span><span>' + r.feeRate + ' → ' + r.destination + '</span>';
+        whtml += '<span style="color:#888;">增值税:</span><span>' + r.taxTreatment.slice(0,60) + '...</span>';
+        whtml += '<span style="color:#888;">用户个税:</span><span>' + r.pitNote + '</span>';
+        whtml += '<span style="color:#888;">分录:</span><span><code style="font-size:10px;background:#eee;padding:1px 4px;border-radius:3px;">' + r.accounting + '</code></span>';
+        whtml += '</div>';
+        whtml += '<div style="margin-top:6px;font-size:12px;padding:6px 10px;background:#e8f5e9;border-radius:6px;color:#2e7d32;"><strong>✅ 建议:</strong> ' + r.recommendation + '</div>';
+        whtml += '</div>';
+      });
+
+      // 汇总表
+      whtml += '<div style="overflow-x:auto;margin-top:8px;">';
+      whtml += '<table style="font-size:12px;"><thead><tr>';
+      wf.summaryTable.headers.forEach(h => { whtml += '<th style="white-space:nowrap;">' + h + '</th>'; });
+      whtml += '</tr></thead><tbody>';
+      wf.summaryTable.rows.forEach(r => {
+        whtml += '<tr>' + r.map(c => '<td>' + c + '</td>').join('') + '</tr>';
+      });
+      whtml += '</tbody></table></div>';
+
+      wb.innerHTML = whtml;
+    }
+  }).catch(() => {});
+}
+
+// 分类汇总
+setTimeout(() => {
+  api('/finance/daily-summary?days=30').then(d => {
+    if (!d.ok) return;
+    const b = document.getElementById('catSummary');
+    if (!b) return;
+    let html = '<div class="cat-list">';
+    Object.entries(d.data.categorySummary)
+      .sort((a, b2) => b2[1].expense - a[1].expense)
+      .slice(0, 8).forEach(([k, v]) => {
+        html += '<div class="cat-item">' + k + ': <span class="cat-val" style="color:' + (v.expense > v.income ? '#e74c3c' : '#27ae60') + '">' + (v.expense || v.income) + '</span></div>';
+      });
+    html += '</div>';
+    html += '<div style="font-size:12px;color:#888;margin-top:4px;">近30天分类统计</div>';
+    b.innerHTML = html;
+  }).catch(() => {});
+}, 500);
+
+function exportCSV() {
+  window.open(API_BASE + '/finance/export?token=' + encodeURIComponent(TOKEN), '_blank');
+  // 需要用Authorization header，所以用fetch下载
+  fetch(API_BASE + '/finance/export', { headers: { 'Authorization': 'Bearer ' + TOKEN } })
+    .then(r => r.blob()).then(blob => {
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = 'finance_export_' + new Date().toISOString().slice(0,10) + '.csv'; a.click();
+      showToast('📥 导出成功');
+    }).catch(() => showToast('导出失败', 'error'));
+}
+
+// ==============================
+// 法务模块
+// ==============================
+function loadLegalDashboard() {
+  api('/legal/cases').then(d => {
+    if (!d.ok) return;
+    document.getElementById('legalTotal').textContent = d.data.total;
+    document.getElementById('legalOpen').textContent = d.data.open;
+    document.getElementById('legalResolved').textContent = d.data.resolved;
+  }).catch(() => {});
+}
+
+function loadComplianceList() {
+  api('/legal/compliance/checklist').then(d => {
+    if (!d.ok) return;
+    const b = document.getElementById('complianceBody');
+    b.innerHTML = d.data.map(c =>
+      '<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #f0f0f0;">' +
+      '<span>' + c.severityIcon + '</span>' +
+      '<span style="flex:1;font-size:13px;">' + c.name + '</span>' +
+      '<span style="font-size:11px;color:#888;">' + c.desc.slice(0,18) + '...</span></div>'
+    ).join('');
+  }).catch(() => {});
+}
+
+function runCompliance() {
+  api('/legal/compliance/check', { method: 'POST', body: '{}' }).then(d => {
+    if (d.ok) {
+      showToast(d.msg);
+      loadComplianceList();
+    } else showToast('❌ ' + (d.msg || '检查失败'), 'error');
+  }).catch(e => showToast('❌ ' + e.message, 'error'));
+}
+
+function addLegalCase() {
+  const caseType = document.getElementById('caseType').value;
+  const title = document.getElementById('caseTitle').value;
+  const description = document.getElementById('caseDesc').value;
+  if (!title) { showToast('请填写标题', 'error'); return; }
+
+  api('/legal/cases', { method: 'POST', body: JSON.stringify({ caseType, title, description }) })
+    .then(d => {
+      if (d.ok) {
+        showToast('✅ 案件已记录: ' + title);
+        document.getElementById('caseTitle').value = '';
+        document.getElementById('caseDesc').value = '';
+        loadLegalCases();
+        loadLegalDashboard();
+      } else showToast('❌ ' + (d.msg || '记录失败'), 'error');
+    }).catch(e => showToast('❌ ' + e.message, 'error'));
+}
+
+function loadLegalCases() {
+  api('/legal/cases?limit=50').then(d => {
+    if (!d.ok) return;
+    const tbody = document.getElementById('legalCasesBody');
+    tbody.innerHTML = d.data.list.map(c =>
+      '<tr><td>' + new Date(c.createdAt).toISOString().slice(0,10) +
+      '</td><td>' + c.caseType +
+      '</td><td>' + c.title +
+      '</td><td><span class="tag ' + c.status + '">' + ({open:'待处理',investigating:'调查中',resolved:'已解决',closed:'已关闭'}[c.status] || c.status) + '</span></td></tr>'
+    ).join('');
+  }).catch(() => {});
+}
+
+function loadExtremeCases() {
+  api('/legal/extreme-cases').then(d => {
+    if (!d.ok) return;
+    const b = document.getElementById('extremeBody');
+    b.innerHTML = d.data.map(p =>
+      '<div class="extreme-card">' +
+      '<div class="ec-title">🛡️ ' + p.name + ' <span style="font-weight:normal;font-size:12px;color:#888;">(' + p.severity + ')</span></div>' +
+      '<div style="margin:4px 0;font-size:12px;color:#555;"><strong>检测:</strong> ' + p.detection.join('、') + '</div>' +
+      '<div style="font-size:12px;color:#666;">' + p.response.map((s, i) => '<div class="ec-step">' + (i+1) + '. ' + s + '</div>').join('') + '</div>' +
+      '</div>'
+    ).join('');
+  }).catch(() => {});
+}
+
+function exportLegal() {
+  api('/legal/cases', {method:'GET'}).then(() => {
+    fetch(API_BASE + '/legal/cases/export', { headers: { 'Authorization': 'Bearer ' + TOKEN } })
+      .then(r => r.blob()).then(blob => {
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        a.download = 'legal_cases_' + new Date().toISOString().slice(0,10) + '.csv'; a.click();
+        showToast('📥 法务台账导出成功');
+      });
+  }).catch(() => {});
+}
+
+// ==============================
+// 金融模块
+// ==============================
+function loadStrategic() {
+  Promise.all([
+    api('/strategic/kpi'),
+    api('/strategic/valuation'),
+    api('/strategic/fundraising'),
+  ]).then(([kpi, val, fund]) => {
+    // KPI
+    if (kpi.ok) {
+      document.getElementById('stratArpu').textContent = kpi.data.arpu.value;
+      document.getElementById('stratGmv').textContent = kpi.data.gmv.value;
+      document.getElementById('stratDau').textContent = kpi.data.dau.value;
+      // KPI明细
+      const b = document.getElementById('kpiBody');
+      if (b) {
+        b.innerHTML = Object.entries(kpi.data).filter(([k]) => k !== 'timestamp').map(([k, v]) =>
+          '<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #f0f0f0;font-size:13px;">' +
+          '<span>' + ({gmv:'GMV',arpu:'ARPU',ltv:'LTV',dau:'DAU',mau:'MAU',daumau:'DAU/MAU',payRate:'付费率',pointsCirculation:'积分流通'} [k] || k) + '</span>' +
+          '<span style="font-weight:600;">' + v.value + (v.benchmark ? ' <span style="color:#888;font-weight:normal;font-size:11px;">(基准:' + v.benchmark + ')</span>' : '') + '</span></div>'
+        ).join('');
+      }
+    }
+    // 估值
+    if (val.ok) {
+      document.getElementById('stratValuation').textContent = val.data.valuationReadable;
+      document.getElementById('stratValuationMethod').textContent = '综合估值';
+    }
+    // 融资
+    if (fund.ok) {
+      document.getElementById('stratStage').textContent = fund.data.currentAssessment.stage;
+    }
+  }).catch(() => {});
+}
+
+function addDecision() {
+  const type = document.getElementById('decType').value;
+  const title = document.getElementById('decTitle').value;
+  const description = document.getElementById('decDesc').value;
+  if (!title) { showToast('请填写标题', 'error'); return; }
+
+  api('/strategic/decisions', { method: 'POST', body: JSON.stringify({ type, title, description }) })
+    .then(d => {
+      if (d.ok) {
+        showToast('✅ 决策已记录');
+        document.getElementById('decTitle').value = '';
+        document.getElementById('decDesc').value = '';
+        loadDecisions();
+      } else showToast('❌ ' + (d.msg || '记录失败'), 'error');
+    }).catch(e => showToast('❌ ' + e.message, 'error'));
+}
+
+function loadFundingRoadmap() {
+  api('/strategic/fundraising').then(d => {
+    if (!d.ok) return;
+    const b = document.getElementById('fundingBody');
+    b.innerHTML = d.data.roadmap.map(m =>
+      '<div class="milestone">' +
+      '<div class="milestone-dot ' + m.status + '"></div>' +
+      '<div class="milestone-body">' +
+      '<h4>' + m.stage + ' <span style="font-weight:normal;font-size:12px;color:#888;">' + m.amount + ' | 估值 ' + m.valuation + '</span></h4>' +
+      '<p>' + m.description + '</p>' +
+      '<div style="margin-top:4px;font-size:11px;color:#888;">关键指标: ' + m.metrics.join('、') + '</div>' +
+      '</div></div>'
+    ).join('');
+  }).catch(() => {});
+}
+
+function loadDecisions() {
+  api('/strategic/decisions?limit=30').then(d => {
+    if (!d.ok) return;
+    const tbody = document.getElementById('decisionsBody');
+    tbody.innerHTML = d.data.list.map(dc =>
+      '<tr><td>' + new Date(dc.createdAt).toISOString().slice(0,10) +
+      '</td><td>' + dc.type +
+      '</td><td>' + dc.title +
+      '</td><td>' + (dc.impact || dc.description || '') + '</td></tr>'
+    ).join('');
+  }).catch(() => {});
+}
+
+function loadIpoReadiness() {
+  api('/strategic/ipo-readiness').then(d => {
+    if (!d.ok) return;
+    const b = document.getElementById('ipoBody');
+    // 进度条
+    let html = '<div style="margin-bottom:12px;"><div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:4px;"><span>整体准备度</span><span style="font-weight:600;">' + d.data.readinessScore + '%</span></div><div style="height:10px;background:#eee;border-radius:5px;overflow:hidden;"><div style="height:100%;width:' + d.data.readinessScore + '%;background:linear-gradient(90deg,#667eea,#764ba2);border-radius:5px;"></div></div></div>';
+    d.data.checks.forEach(cat => {
+      const done = cat.items.filter(i => i.ready).length;
+      const total = cat.items.length;
+      html += '<div style="margin-bottom:8px;"><div style="font-size:13px;font-weight:600;margin-bottom:4px;">' + cat.category + ' (' + done + '/' + total + ')</div>';
+      cat.items.forEach(i => {
+        html += '<div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12px;color:#555;"><span>' + (i.ready ? '✅' : '⬜') + '</span><span style="flex:1;">' + i.name + '</span><span style="color:#888;">' + i.note + '</span></div>';
+      });
+      html += '</div>';
+    });
+    html += '<div style="margin-top:8px;padding-top:8px;border-top:1px solid #eee;font-size:12px;color:#667eea;">' + d.data.recommendations.join('<br>') + '</div>';
+    b.innerHTML = html;
+  }).catch(() => {});
+}
+
+function exportStrategic() {
+  fetch(API_BASE + '/strategic/decisions/export', { headers: { 'Authorization': 'Bearer ' + TOKEN } })
+    .then(r => r.blob()).then(blob => {
+      const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+      a.download = 'strategic_decisions_' + new Date().toISOString().slice(0,10) + '.csv'; a.click();
+      showToast('📥 决策日志导出成功');
+    }).catch(() => showToast('导出失败', 'error'));
+}
+
+// Enter提交
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.closest('.panel-body')) {
+    const btn = e.target.closest('.panel-body').querySelector('.btn-primary');
+    if (btn) btn.click();
+  }
+});
+</script>
+</body>
+</html>
